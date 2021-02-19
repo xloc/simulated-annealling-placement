@@ -129,15 +129,22 @@ class Chip:
             net.update_ltrb()
         self.grid[coors] = cell
 
+    def cell_cost(self, coord):
+        """
+        the bounding box of all nets in the cell should **already** be updated.
+        """
+        cell = self.grid[coord]
+        if cell is None:
+            return 0
+        cost = 0
+        for net in cell:
+            cost += net.cost()
+        return cost
 
-def calc_cell_cost(cell):
-    """
-    the bounding box of all nets in the cell should **already** be updated.
-    """
-    cost = 0
-    for net in cell:
-        cost += net.cost()
-    return cost
+    def swap_cell(self, a, b):
+        ca, cb = self.detach_cell(a), self.detach_cell(b)
+        self.attach_cell(ca, b)
+        self.attach_cell(cb, a)
 
 
 def move(cell, src, dst):
@@ -150,33 +157,6 @@ def move(cell, src, dst):
         moved_net.update_ltrb()
         moved_cell.append(moved_net)
     return moved_cell
-
-
-def calc_delta_cost(chip, a, b):
-    ca, cb = chip.grid[a], chip.grid[b]
-    if ca is None and cb is None:
-        return math.nan, None, None
-    if ca is None:  # cb is valid
-        prev_cost = calc_cell_cost(cb)
-        ca_at_b, cb_at_a = None, move(cb, b, a)
-        curr_cost = calc_cell_cost(cb_at_a)
-    elif cb is None:  # ca is valid
-        prev_cost = calc_cell_cost(ca)
-        ca_at_b, cb_at_a = move(ca, a, b), None
-        curr_cost = calc_cell_cost(ca_at_b)
-    else:
-        prev_cost = calc_cell_cost(ca) + calc_cell_cost(cb)
-        ca_at_b, cb_at_a = move(ca, a, b), move(cb, b, a)
-        curr_cost = calc_cell_cost(ca_at_b) + calc_cell_cost(cb_at_a)
-
-    delta_cost: int = curr_cost - prev_cost
-    return delta_cost, ca_at_b, cb_at_a
-
-
-def swap_cell(chip: Chip, a, b):
-    ca, cb = chip.detach_cell(a), chip.detach_cell(b)
-    chip.attach_cell(ca, b)
-    chip.attach_cell(cb, a)
 
 
 def annealing_placement(chip: Chip):
@@ -205,7 +185,7 @@ def annealing_placement(chip: Chip):
             a, b = random.sample(chip.pins, k=2)
 
             prev_cost = chip.cost()
-            swap_cell(chip, a, b)
+            chip.swap_cell(a, b)
             curr_cost = chip.cost()
             delta = curr_cost - prev_cost
 
@@ -217,7 +197,7 @@ def annealing_placement(chip: Chip):
                 acc_delta += delta
             else:
                 # restore swap
-                swap_cell(chip, a, b)
+                chip.swap_cell(a, b)
 
         print(t, acc_delta)
         t = decrease(t)
