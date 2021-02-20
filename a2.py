@@ -146,6 +146,18 @@ class Chip:
         self.attach_cell(ca, b)
         self.attach_cell(cb, a)
 
+    def plot(self):
+        nets = self.nets
+        import matplotlib.pyplot as plt
+        plt.figure()
+        for net in nets:
+            arr = np.array(list(net.pins))
+            x, y = arr[:, 0], arr[:, 1]
+            plt.plot(x, y, color=[0, 0, 0, 0.15])
+        margin = 1
+        plt.xlim(-margin, self.nx-1+margin)
+        plt.ylim(-margin, self.ny-1+margin)
+
 
 def move(cell, src, dst):
     cell = list(cell)
@@ -159,29 +171,24 @@ def move(cell, src, dst):
     return moved_cell
 
 
-def annealing_placement(chip: Chip):
-    t = 1_000
-
-    def decrease(pt):
-        return pt * 0.9
+def annealing_placement(chip: Chip, t_init=100, t_decrease_factor=0.5, t_terminate=0.01):
+    t = t_init
+    i_iter = 0
     n_batch = int(100 * chip.n_cell ** (4/3))
 
-    i_iter = 0
+    def decrease_t(pt):
+        return pt * t_decrease_factor
 
-    def criteria():
-        nonlocal i_iter
-        if t < 0.01:
+    def should_terminate():
+        if t < t_terminate:
             return True
 
+    acc_delta = 0
+    yield chip, dict(acc_delta=acc_delta, t=t, i_iter=i_iter)
+
     while True:
-        chip.grid.format_print(10, nets_formatter)
-        print('==='*10)
         acc_delta = 0
-        print("%10d" % chip.cost())
-        for i_iter in range(n_batch):
-            # chip.grid.format_print(10, nets_formatter)
-            # print('==='*10)
-            # print(chip.cost())
+        for _ in range(n_batch):
             a, b = random.sample(chip.pins, k=2)
 
             prev_cost = chip.cost()
@@ -190,19 +197,16 @@ def annealing_placement(chip: Chip):
             delta = curr_cost - prev_cost
 
             r = random.random()
-            if r < math.exp(-delta/t):
-                # if delta < 0:
-                # do swap
-                pass
+            if r < math.exp(-delta/t):  # confirm swap
                 acc_delta += delta
-            else:
-                # restore swap
+            else:  # restore swap
                 chip.swap_cell(a, b)
 
-        print(t, acc_delta)
-        t = decrease(t)
+        yield chip, dict(acc_delta=acc_delta, t=t, i_iter=i_iter)
 
-        if criteria():
+        i_iter += 1
+        t = decrease_t(t)
+        if should_terminate():
             break
 
 
