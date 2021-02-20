@@ -4,15 +4,14 @@ import random
 from typing import List
 import math
 
-file_path = 'benchmarks/cm151a.txt'
-
 
 class Net:
+    __slots__ = tuple('id pins t b l r'.split())
+
     def __init__(self, netID):
         self.id = netID
         self.pins = set()
-        self.lt = None
-        self.rb = None
+        self.t = self.b = self.l = self.r = None
 
     def update_ltrb(self):
         i_pin = iter(self.pins)
@@ -30,18 +29,13 @@ class Net:
             elif y > b:
                 b = y
 
-        self.lt = (l, t)
-        self.rb = (r, b)
+        self.t, self.b, self.l, self.r = t, b, l, r
 
     def __repr__(self):
         return f"<Net id={self.id}>"
 
     def cost(self):
-        (l, t), (r, b) = self.lt, self.rb
-        cost = 0
-        cost += r - l
-        cost += b - t
-
+        cost = (self.r - self.l) + (self.b - self.t)
         return cost
 
 
@@ -102,10 +96,7 @@ class Chip:
             net.update_ltrb()
 
     def cost(self):
-        cost = 0
-        for net in self.nets:
-            cost += net.cost()
-        return cost
+        return sum(net.cost() for net in self.nets)
 
     def detach_cell(self, coors):
         cell = self.grid[coors]
