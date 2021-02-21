@@ -31,8 +31,8 @@ def main():
     for chip, info in steps:
         print(' '.join([
             f"Cost={chip.cost():6d}",
-            f"temp={info['t']:.2f}",
-            f"delta={info['acc_delta']}"
+            f"temp={info['t']:7.2f}",
+            f"delta={info['acc_delta']:6d}"
         ]))
         i_iter = info['i_iter']
         chip.plot()

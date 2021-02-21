@@ -3,15 +3,16 @@ import parser
 import random
 from typing import List
 import math
+import matplotlib.pyplot as plt
 
 
 class Net:
-    __slots__ = tuple('id pins t b l r'.split())
+    __slots__ = tuple('id pins cost'.split())
 
     def __init__(self, netID):
         self.id = netID
         self.pins = set()
-        self.t = self.b = self.l = self.r = None
+        self.cost = 0
 
     def update_ltrb(self):
         i_pin = iter(self.pins)
@@ -29,14 +30,10 @@ class Net:
             elif y > b:
                 b = y
 
-        self.t, self.b, self.l, self.r = t, b, l, r
+        self.cost = (r - l) + (b - t)
 
     def __repr__(self):
         return f"<Net id={self.id}>"
-
-    def cost(self):
-        cost = (self.r - self.l) + (self.b - self.t)
-        return cost
 
 
 class Grid:
@@ -96,7 +93,7 @@ class Chip:
             net.update_ltrb()
 
     def cost(self):
-        return sum(net.cost() for net in self.nets)
+        return sum(net.cost for net in self.nets)
 
     def detach_cell(self, coors):
         cell = self.grid[coors]
@@ -120,6 +117,20 @@ class Chip:
             net.update_ltrb()
         self.grid[coors] = cell
 
+    def swap_cell(self, a, b):
+        ca, cb = self.detach_cell(a), self.detach_cell(b)
+        self.attach_cell(ca, b)
+        self.attach_cell(cb, a)
+
+    def plot(self, ax):
+        nets = self.nets
+        for net in nets:
+            arr = np.array(list(net.pins))
+            x, y = arr[:, 0], arr[:, 1]
+            ax.plot(x, y, color=[0, 0, 0, 0.3])
+        ax.set_xlim([0, self.nx-1])
+        ax.set_ylim([0, self.ny-1])
+
     def cell_cost(self, coord):
         """
         the bounding box of all nets in the cell should **already** be updated.
@@ -127,27 +138,8 @@ class Chip:
         cell = self.grid[coord]
         if cell is None:
             return 0
-        cost = 0
-        for net in cell:
-            cost += net.cost()
-        return cost
-
-    def swap_cell(self, a, b):
-        ca, cb = self.detach_cell(a), self.detach_cell(b)
-        self.attach_cell(ca, b)
-        self.attach_cell(cb, a)
-
-    def plot(self):
-        nets = self.nets
-        import matplotlib.pyplot as plt
-        plt.figure()
-        for net in nets:
-            arr = np.array(list(net.pins))
-            x, y = arr[:, 0], arr[:, 1]
-            plt.plot(x, y, color=[0, 0, 0, 0.15])
-        margin = 1
-        plt.xlim(-margin, self.nx-1+margin)
-        plt.ylim(-margin, self.ny-1+margin)
+        else:
+            return sum(net.cost for net in cell)
 
 
 def move(cell, src, dst):
@@ -179,12 +171,13 @@ def annealing_placement(chip: Chip, t_init=100, t_decrease_factor=0.5, t_termina
 
     while True:
         acc_delta = 0
+
         for _ in range(n_batch):
             a, b = random.sample(chip.pins, k=2)
 
-            prev_cost = chip.cost()
+            prev_cost = chip.cell_cost(a) + chip.cell_cost(b)
             chip.swap_cell(a, b)
-            curr_cost = chip.cost()
+            curr_cost = chip.cell_cost(a) + chip.cell_cost(b)
             delta = curr_cost - prev_cost
 
             r = random.random()
