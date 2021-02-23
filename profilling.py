@@ -22,7 +22,7 @@ chip = a2.Chip(chip_info)
 
 steps = annealing_placement(
     chip,
-    t_init=100,
+    t_init=5,
     t_decrease_factor=0.5,
     t_terminate=1)
 

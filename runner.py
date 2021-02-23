@@ -8,11 +8,12 @@ import a2
 import parser
 import random
 import matplotlib.pyplot as plt
+import time
 
 
 random.seed(12)
 
-save_path = 'saves'
+save_path = 'saves_no_cython'
 
 
 def clear_or_create_folder(dir):
@@ -55,7 +56,7 @@ def run_benchmark(benchmark_name):
         chip.plot(ax)
         ax.axis('off')
         fig.savefig(f'{path}/{i_iter}.png')
-        fig.clf()
+        plt.close()
 
         rec['costs'].append(cost)
         rec['temps'].append(t)
@@ -79,4 +80,7 @@ benchmarks = [
     'apex4',
 ]
 for name in benchmarks:
+    st = time.time()
     run_benchmark(name)
+    ed = time.time()
+    print(f'time = {ed-st:.2f}')

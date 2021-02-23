@@ -1,3 +1,6 @@
+import pyximport
+pyximport.install()  # noqa
+
 import numpy as np
 import parser
 import random
@@ -34,6 +37,9 @@ class Net:
 
     def __repr__(self):
         return f"<Net id={self.id}>"
+
+
+# from net import Net  # noqa
 
 
 class Grid:
