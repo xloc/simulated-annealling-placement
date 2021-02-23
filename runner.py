@@ -1,3 +1,4 @@
+from generate_table import print_results
 import pathlib
 import shutil
 import os.path
@@ -24,18 +25,18 @@ def clear_or_create_folder(dir):
     return path
 
 
-def run_benchmark(benchmark_name):
+def run_benchmark(benchmark_name, benchmark_path='benchmarks'):
     Net = a2.import_Net(use_cython=True)
     path = clear_or_create_folder(benchmark_name)
 
-    chip_info = parser.parse_file(f'benchmarks/{benchmark_name}.txt')
+    chip_info = parser.parse_file(f'{benchmark_path}/{benchmark_name}.txt')
     chip = a2.Chip(chip_info, Net)
     rec = dict(costs=[], temps=[])
 
     steps = a2.annealing_placement(
         chip,
         t_init=100,
-        t_decrease_factor=0.5,
+        t_decrease_factor=0.9,
         t_terminate=0.01)
 
     print(f"{'='*10}\n{benchmark_name}")
@@ -71,17 +72,19 @@ benchmarks = [
     'cm138a',
     'cm150a',
     'cm162a',
-    # 'alu2',
-    # 'C880',
-    # 'e64',
-    # 'apex1',
-    # 'pairb',
-    # 'paira',
-    # 'cps',
-    # 'apex4',
+    'alu2',
+    'C880',
+    'e64',
+    'apex1',
+    'pairb',
+    'paira',
+    'cps',
+    'apex4',
 ]
 for name in benchmarks:
     st = time.time()
     run_benchmark(name)
     ed = time.time()
     print(f'time = {ed-st:.2f}')
+
+print_results(save_path)

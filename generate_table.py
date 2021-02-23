@@ -22,7 +22,7 @@ def print_results(path):
         with open(path) as f:
             data = json.load(f)
 
-        last_cost = data['costs'][-1] * 2
+        last_cost = data['costs'][-1]
         names.append(name)
         costs.append(last_cost)
 
@@ -31,4 +31,5 @@ def print_results(path):
     print(' '.join([f"{v:{width}d}" for v in costs]))
 
 
-print_results('saves')
+if __name__ == "__main__":
+    print_results('saves_no_cython backup')
