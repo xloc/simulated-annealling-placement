@@ -1,36 +1,29 @@
 import parser
 import a2
+from net import Net
 
 
 def test_chip():
+    import random
+    random.seed(1)
+
     ci = parser.Input(2, 2, 2, [[0, 1]])
-    c = a2.Chip(ci)
+    c = a2.Chip(ci, Net)
 
     assert c.pins == [(0, 0), (0, 1), (1, 0), (1, 1)]
+    c.grid.format_print(8, a2.nets_formatter)
+    assert c.grid[0, 0] == {c.nets[0]}
+    assert c.grid[1, 1] == {c.nets[0]}
 
-    assert c.grid
-    assert False
 
+def test_cell_cost():
+    import random
+    random.seed(1)
 
-def test_cost():
-    nets = []
+    ci = parser.Input(3, 2, 3, [[0, 1], [1, 2]])
+    c = a2.Chip(ci, Net)
 
-    n = a2.Net(0)
-    # cost = 2
-    n.pins.update([
-        (0, 1), (0, 3)
-    ])
-    n.update_ltrb()
-    nets.append(n)
-
-    assert a2.calc_cost(nets) == 2
-
-    n = a2.Net(1)
-    # cost = 4
-    n.pins.update([
-        (1, 1), (3, 3)
-    ])
-    n.update_ltrb()
-    nets.append(n)
-
-    assert a2.calc_cost(nets) == 2 + 4
+    # c.grid.format_print(8, a2.nets_formatter)
+    assert c.cell_cost((1, 0)) == 1
+    assert c.cell_cost((1, 1)) == 2
+    assert c.cell_cost((2, 1)) == 1

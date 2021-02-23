@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 import time
 
 
-random.seed(12)
+# random.seed(6)
 
-save_path = 'saves_no_cython'
+save_path = 'saves'
 
 
 def clear_or_create_folder(dir):
@@ -25,10 +25,11 @@ def clear_or_create_folder(dir):
 
 
 def run_benchmark(benchmark_name):
+    Net = a2.import_Net(use_cython=True)
     path = clear_or_create_folder(benchmark_name)
 
     chip_info = parser.parse_file(f'benchmarks/{benchmark_name}.txt')
-    chip = a2.Chip(chip_info)
+    chip = a2.Chip(chip_info, Net)
     rec = dict(costs=[], temps=[])
 
     steps = a2.annealing_placement(
@@ -66,18 +67,18 @@ def run_benchmark(benchmark_name):
 
 
 benchmarks = [
-    'cm138a',
     'cm151a',
-    'cm162a',
+    'cm138a',
     'cm150a',
-    'alu2',
-    'C880',
-    'e64',
-    'apex1',
-    'pairb',
-    'paira',
-    'cps',
-    'apex4',
+    'cm162a',
+    # 'alu2',
+    # 'C880',
+    # 'e64',
+    # 'apex1',
+    # 'pairb',
+    # 'paira',
+    # 'cps',
+    # 'apex4',
 ]
 for name in benchmarks:
     st = time.time()

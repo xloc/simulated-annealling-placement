@@ -20,7 +20,7 @@ def main():
 
     random.seed(12)
     chip_info = parser.parse_file('benchmarks/alu2.txt')
-    chip = a2.Chip(chip_info)
+    chip = a2.Chip(chip_info, a2.import_Net(False))
 
     steps = a2.annealing_placement(
         chip,
@@ -35,8 +35,14 @@ def main():
             f"delta={info['acc_delta']:6d}"
         ]))
         i_iter = info['i_iter']
-        chip.plot()
-        plt.savefig(f'{save_path}/{i_iter}.png')
+
+        fig = plt.figure(frameon=False, dpi=200)
+        ax = fig.add_axes([0, 0, 1, 1])
+        ax.set_facecolor("white")
+        chip.plot(ax)
+        ax.axis('off')
+        plt.show()
+        return
 
 
 if __name__ == "__main__":

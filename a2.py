@@ -1,6 +1,3 @@
-import pyximport
-pyximport.install()  # noqa
-
 import numpy as np
 import parser
 import random
@@ -9,37 +6,19 @@ import math
 import matplotlib.pyplot as plt
 
 
-class Net:
-    __slots__ = tuple('id pins cost'.split())
-
-    def __init__(self, netID):
-        self.id = netID
-        self.pins = set()
-        self.cost = 0
-
-    def update_ltrb(self):
-        i_pin = iter(self.pins)
-        x, y = next(i_pin)
-        t, b = y, y
-        l, r = x, x
-
-        for x, y in i_pin:
-            if x < l:
-                l = x
-            elif x > r:
-                r = x
-            if y < t:
-                t = y
-            elif y > b:
-                b = y
-
-        self.cost = (r - l) + (b - t)
-
-    def __repr__(self):
-        return f"<Net id={self.id}>"
-
-
-# from net import Net  # noqa
+def import_Net(use_cython=True):
+    if use_cython:
+        try:
+            import pyximport
+            pyximport.install()
+            from net_cython import Net
+            print("used cython optimized Net class")
+            return Net
+        except ValueError:
+            pass
+    from net import Net
+    print("used python Net class")
+    return Net
 
 
 class Grid:
@@ -65,7 +44,7 @@ class Grid:
 
 
 class Chip:
-    def __init__(self, chip_info: parser.Input):
+    def __init__(self, chip_info: parser.Input, Net_):
         self.ny = ny = chip_info.ny
         self.nx = nx = chip_info.nx
         self.shape = (nx, ny)
@@ -86,7 +65,7 @@ class Chip:
         self.grid = Grid(nx, ny)
         self.nets = []
         for net_ID, cell_IDs in enumerate(chip_info.nets):
-            net = Net(net_ID)
+            net = Net_(net_ID)
             self.nets.append(net)
             # print(cell_IDs)
             for cid in cell_IDs:
@@ -198,6 +177,22 @@ def annealing_placement(chip: Chip, t_init=100, t_decrease_factor=0.5, t_termina
         t = decrease_t(t)
         if should_terminate():
             break
+
+    acc_delta = 0
+    for _ in range(n_batch):
+        a, b = random.sample(chip.pins, k=2)
+
+        prev_cost = chip.cell_cost(a) + chip.cell_cost(b)
+        chip.swap_cell(a, b)
+        curr_cost = chip.cell_cost(a) + chip.cell_cost(b)
+        delta = curr_cost - prev_cost
+
+        r = random.random()
+        if delta < 0:  # confirm swap
+            acc_delta += delta
+        else:  # restore swap
+            chip.swap_cell(a, b)
+    yield chip, dict(acc_delta=acc_delta, t=0, i_iter=i_iter)
 
 
 def nets_formatter(cell: set):

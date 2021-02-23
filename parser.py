@@ -8,7 +8,8 @@ def parse_file(path) -> Input:
         n_cell, n_net, ny, nx = [int(n) for n in f.readline().split()]
 
         nets = []
-        for _ in range(n_net):
+        i_net = 0
+        while True:
             line = f.readline().strip()
             if line == "":
                 continue
@@ -16,6 +17,10 @@ def parse_file(path) -> Input:
             cell_IDs = line.split()[1:]
             cell_IDs = list(map(int, cell_IDs))
             nets.append(cell_IDs)
+
+            i_net += 1
+            if not i_net < n_net:
+                break
 
     return Input(nx, ny, n_cell, nets)
 

@@ -1,4 +1,4 @@
-from a2 import Net
+from net import Net
 
 
 def test_update_ltrb():
@@ -8,8 +8,7 @@ def test_update_ltrb():
     ])
     n.update_ltrb()
 
-    assert n.lt == (1, 2)
-    assert n.rb == (9, 5)
+    assert n.cost == 11
 
 
 def test_update_ltrb_one_pin():
@@ -19,5 +18,4 @@ def test_update_ltrb_one_pin():
     ])
     n.update_ltrb()
 
-    assert n.lt == (1, 2)
-    assert n.rb == (1, 2)
+    assert n.cost == 0

@@ -15,7 +15,6 @@ cdef class Net:
         cdef int t = y, b = y
         cdef int l = x, r = x
 
-        
         for x, y in i_pin:
             with nogil:
                 if x < l:
