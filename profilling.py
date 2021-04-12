@@ -17,7 +17,7 @@ def clear_or_create_folder(path):
 
 random.seed(12)
 chip_info = parser.parse_file('benchmarks/alu2.txt')
-chip = a2.Chip(chip_info)
+chip = a2.Chip(a2.import_Net(), chip_info)
 
 
 steps = annealing_placement(

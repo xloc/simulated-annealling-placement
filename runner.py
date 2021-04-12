@@ -35,9 +35,9 @@ def run_benchmark(benchmark_name, benchmark_path='benchmarks'):
 
     steps = a2.annealing_placement(
         chip,
-        t_init=100,
+        t_init=5,
         t_decrease_factor=0.9,
-        t_terminate=0.01)
+        t_terminate=0.1)
 
     print(f"{'='*10}\n{benchmark_name}")
     for chip, info in steps:
